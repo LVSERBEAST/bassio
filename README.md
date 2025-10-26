@@ -1,2 +1,2 @@
 # bassio
-A personal bass guitar training application focused on fretboard mastery and music theory fundamentals. Bassio combines real-time audio detection with interactive exercises to help bass players develop essential skills through structured practice.
+Bass guitar learning app with real-time audio detection and music theory training
