@@ -1,0 +1,128 @@
+.bass-neck-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8rem;
+  background: linear-gradient(180deg, rgba(26, 25, 23, 0.95), rgba(13, 12, 11, 0.98));
+  border-top: 2px solid rgba(238, 152, 0, 0.2);
+  box-shadow: 
+    0 -4px 20px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(87, 83, 78, 0.1);
+  z-index: 999;
+  backdrop-filter: blur(10px);
+}
+
+.fretboard {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 1rem 2rem;
+  overflow: hidden;
+}
+
+.string-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    rgba(168, 162, 158, 0.6) 0%, 
+    rgba(168, 162, 158, 0.8) 50%, 
+    rgba(168, 162, 158, 0.6) 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  
+  &:nth-child(1) { top: 20%; }
+  &:nth-child(2) { top: 40%; }
+  &:nth-child(3) { top: 60%; }
+  &:nth-child(4) { top: 80%; }
+}
+
+.string-label {
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: rgba(247, 239, 235, 0.7);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.fret-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(87, 83, 78, 0.5);
+  
+  .dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0.75rem;
+    height: 0.75rem;
+    background: radial-gradient(circle, rgba(238, 152, 0, 0.3), rgba(238, 152, 0, 0.1));
+    border-radius: 50%;
+    border: 1px solid rgba(238, 152, 0, 0.4);
+  }
+  
+  .fret-number {
+    position: absolute;
+    bottom: 0.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(247, 239, 235, 0.5);
+  }
+}
+
+.note-marker {
+  position: absolute;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #ee9800;
+  border: 2px solid #ffb95f;
+  box-shadow: 
+    0 0 16px rgba(238, 152, 0, 0.8),
+    0 0 8px rgba(238, 152, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  animation: note-glow 0.5s ease-in-out infinite alternate;
+  z-index: 10;
+}
+
+@keyframes note-glow {
+  0% {
+    box-shadow: 
+      0 0 16px rgba(238, 152, 0, 0.8),
+      0 0 8px rgba(238, 152, 0, 0.4);
+  }
+  100% {
+    box-shadow: 
+      0 0 24px rgba(238, 152, 0, 1),
+      0 0 12px rgba(238, 152, 0, 0.6);
+  }
+}
+
+@media (max-width: 768px) {
+  .bass-neck-container {
+    height: 6rem;
+  }
+  
+  .fretboard {
+    padding: 0.75rem 1rem;
+  }
+  
+  .string-label {
+    font-size: 0.75rem;
+  }
+  
+  .note-marker {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}

@@ -1,0 +1,173 @@
+<div class="circle-container">
+  <!-- Header -->
+  <div class="practice-header">
+    <h1>Circle of Fourths</h1>
+    <div class="stats">
+      <span class="streak">🔥 {{ streak() }}</span>
+      <span class="timer">⏱️ {{ timer() }}s</span>
+      <span class="progress-text">{{ completedCount() }}/12</span>
+    </div>
+  </div>
+
+  <!-- Mode Tabs -->
+  <mat-tab-group (selectedIndexChange)="onModeChange($event)" class="mode-tabs">
+    <mat-tab label="Key Identification"></mat-tab>
+    <mat-tab label="Scale Builder"></mat-tab>
+    <mat-tab label="Chord Navigator"></mat-tab>
+  </mat-tab-group>
+
+  <!-- Main Content -->
+  <div class="content-area">
+    <!-- Circle Diagram -->
+    <div class="circle-section">
+      <svg class="circle-svg" viewBox="0 0 400 400">
+        <!-- Outer circle (major keys) -->
+        <circle
+          cx="200"
+          cy="200"
+          r="180"
+          fill="none"
+          stroke="rgba(87, 83, 78, 0.3)"
+          stroke-width="2"
+        />
+        <circle
+          cx="200"
+          cy="200"
+          r="140"
+          fill="none"
+          stroke="rgba(87, 83, 78, 0.3)"
+          stroke-width="2"
+        />
+
+        <!-- Key segments -->
+        @for (key of keys(); track key.id) {
+        <g
+          class="key-segment"
+          [class.selected]="key.id === selectedKey()"
+          [class.completed]="key.status === 'completed'"
+          [class.locked]="key.status === 'locked'"
+          (click)="selectKey(key.id)"
+        >
+          <!-- Outer segment (major) -->
+          <path
+            [attr.d]="
+              'M 200 200 L ' +
+              (200 + 180 * Math.sin((key.angle * Math.PI) / 180)) +
+              ' ' +
+              (200 - 180 * Math.cos((key.angle * Math.PI) / 180)) +
+              ' A 180 180 0 0 1 ' +
+              (200 + 180 * Math.sin(((key.angle + 30) * Math.PI) / 180)) +
+              ' ' +
+              (200 - 180 * Math.cos(((key.angle + 30) * Math.PI) / 180)) +
+              ' Z'
+            "
+            [attr.fill]="
+              key.status === 'completed'
+                ? 'rgba(0, 160, 146, 0.3)'
+                : key.id === selectedKey()
+                ? 'rgba(238, 152, 0, 0.3)'
+                : 'rgba(44, 41, 38, 0.5)'
+            "
+            stroke="rgba(87, 83, 78, 0.4)"
+            stroke-width="1"
+          />
+
+          <!-- Major key label -->
+          <text
+            [attr.x]="200 + 160 * Math.sin(((key.angle + 15) * Math.PI) / 180)"
+            [attr.y]="200 - 160 * Math.cos(((key.angle + 15) * Math.PI) / 180)"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            class="key-label major"
+          >
+            {{ key.name }}
+          </text>
+
+          <!-- Minor key label (inner) -->
+          <text
+            [attr.x]="200 + 120 * Math.sin(((key.angle + 15) * Math.PI) / 180)"
+            [attr.y]="200 - 120 * Math.cos(((key.angle + 15) * Math.PI) / 180)"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            class="key-label minor"
+          >
+            {{ key.minor.split(' ')[0] }}
+          </text>
+        </g>
+        }
+
+        <!-- Center circle -->
+        <circle
+          cx="200"
+          cy="200"
+          r="100"
+          fill="rgba(26, 25, 23, 0.9)"
+          stroke="rgba(238, 152, 0, 0.4)"
+          stroke-width="2"
+        />
+        <text x="200" y="190" text-anchor="middle" class="center-label">
+          {{ currentKey().name }}
+        </text>
+        <text x="200" y="210" text-anchor="middle" class="center-sublabel">
+          {{ currentKey().major }}
+        </text>
+      </svg>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="info-panel">
+      <div class="current-key-info">
+        <h2>{{ currentKey().major }}</h2>
+        <div class="key-signature">
+          <span>{{
+            currentKey().sharps > 0
+              ? currentKey().sharps + '♯'
+              : currentKey().flats > 0
+              ? currentKey().flats + '♭'
+              : 'No sharps or flats'
+          }}</span>
+        </div>
+      </div>
+
+      <div class="related-keys">
+        <h3>Related Keys</h3>
+        <div class="key-grid">
+          <div class="key-item">
+            <span class="label">4th Up</span>
+            <span class="value">{{ relatedKeys().fourthUp.name }}</span>
+          </div>
+          <div class="key-item">
+            <span class="label">4th Down</span>
+            <span class="value">{{ relatedKeys().fourthDown.name }}</span>
+          </div>
+          <div class="key-item">
+            <span class="label">Relative Minor</span>
+            <span class="value">{{ relatedKeys().relativeMinor }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="scale-degrees">
+        <h3>Scale Degrees</h3>
+        <div class="degrees-list">
+          <span class="degree">I - II - III - IV - V - VI - VII</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button mat-fab color="primary" (click)="playKey()">
+          <mat-icon>play_arrow</mat-icon>
+        </button>
+        <button mat-stroked-button (click)="skipKey()">Skip</button>
+        <button mat-flat-button color="primary" (click)="checkAnswer()">Check</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="overall-progress">
+    <span>Overall Progress</span>
+    <mat-progress-bar mode="determinate" [value]="progress()"></mat-progress-bar>
+    <span>{{ progress() }}%</span>
+  </div>
+</div>

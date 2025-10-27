@@ -1,0 +1,54 @@
+<mat-toolbar class="main-toolbar">
+  <div class="toolbar-start">
+    <div class="logo-module">
+      <div class="audio-spectrum">
+        @for (level of audioLevels(); track $index) {
+          <div 
+            class="bar"
+            [class.active]="level > 12"
+            [style.height.%]="level">
+          </div>
+        }
+        <div class="logo-text">BASSIO</div>
+      </div>
+      <div class="rack-light" [class.connected]="isAudioConnected()"></div>
+    </div>
+  </div>
+
+  <div class="toolbar-center">
+    <div class="tuner-module" [class.active]="tunerActive()">
+      <div class="tuner-display">
+        @if (tunerActive()) {
+          <div class="display-on">
+            <div class="note">{{ currentNote() }}</div>
+            <div class="meter">
+              <div class="track"></div>
+              <div class="needle" [style.left.%]="needlePosition()"></div>
+            </div>
+            <div class="cents">{{ centsDiff() > 0 ? '+' : '' }}{{ centsDiff().toFixed(0) }}¢</div>
+          </div>
+        } @else {
+          <div class="display-off">OFF</div>
+        }
+      </div>
+      <button class="power-btn" (click)="toggleTuner()" [class.on]="tunerActive()">
+        <span class="toggle"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="toolbar-end">
+    <button mat-button class="toolbar-btn" (click)="onSkillCheck()">Skill Check</button>
+    <button mat-button class="toolbar-btn" [matMenuTriggerFor]="menu">Practice</button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="onPractice('Circle of Fourths')">Circle of Fourths</button>
+      <button mat-menu-item (click)="onPractice('Scale Trainer')">Scale Trainer</button>
+      <button mat-menu-item (click)="onPractice('Note Rush')">Note Rush</button>
+      <button mat-menu-item (click)="onPractice('Free Play')">Free Play</button>
+    </mat-menu>
+
+    <button class="avatar-btn" (click)="onUserClick()">
+      {{ userName().charAt(0) }}
+    </button>
+  </div>
+</mat-toolbar>

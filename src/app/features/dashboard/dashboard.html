@@ -1,0 +1,110 @@
+<div class="dashboard-container">
+  <!-- Overview Map -->
+  <div class="overview-map">
+    @for (lesson of lessons(); track lesson.id; let i = $index) {
+    <div
+      class="map-node"
+      [class.completed]="lesson.status === 'completed'"
+      [class.current]="lesson.status === 'current'"
+      [class.locked]="lesson.status === 'locked'"
+      [class.active]="i === currentIndex()"
+      (click)="selectLesson(i)"
+    >{{ lesson.id }}</div>
+    }
+  </div>
+
+  <!-- Lesson Carousel -->
+  <div class="carousel-container">
+    <div class="carousel-track">
+      @for (lesson of lessons(); track lesson.id; let i = $index) {
+      <div
+        class="lesson-card"
+        [class.selected]="i === currentIndex()"
+        [class.prev]="i < currentIndex()"
+        [class.next]="i > currentIndex()"
+        [class.clickable]="lesson.status !== 'locked'"
+        (click)="selectLesson(i)"
+      >
+        <div class="card-content">
+          <div class="card-header">
+            <span class="card-number">{{ i + 1 }}</span>
+            <div class="card-icon">
+              @if (lesson.status === 'completed') {
+              <mat-icon>check_circle</mat-icon>
+              } @else if (lesson.status === 'current') {
+              <mat-icon>play_circle</mat-icon>
+              } @else {
+              <mat-icon>lock</mat-icon>
+              }
+            </div>
+          </div>
+
+          <h2>{{ lesson.title }}</h2>
+
+          <div class="meta-row">
+            <span class="badge duration">
+              <mat-icon>schedule</mat-icon>
+              {{ lesson.duration }}m
+            </span>
+            <span class="badge difficulty" [attr.data-difficulty]="lesson.difficulty">
+              {{ lesson.difficulty }}
+            </span>
+          </div>
+
+          <p class="description">{{ lesson.description }}</p>
+
+          <div class="skills">
+            <mat-chip-set>
+              @for (skill of lesson.skills; track skill) {
+              <mat-chip>{{ skill }}</mat-chip>
+              }
+            </mat-chip-set>
+          </div>
+
+          @if (lesson.progress !== undefined) {
+          <div class="progress-section">
+            <div class="progress-label-row">
+              <span>Progress</span>
+              <span>{{ lesson.progress }}%</span>
+            </div>
+            <mat-progress-bar mode="determinate" [value]="lesson.progress"></mat-progress-bar>
+          </div>
+          }
+
+          <div class="card-actions">
+            @if (lesson.status !== 'locked') {
+            <button mat-stroked-button (click)="skipLesson(); $event.stopPropagation()">
+              Skip
+            </button>
+            <button
+              mat-flat-button
+              color="primary"
+              (click)="startLesson(); $event.stopPropagation()"
+            >
+              <mat-icon>{{ lesson.status === 'completed' ? 'replay' : 'play_arrow' }}</mat-icon>
+              {{ lesson.status === 'completed' ? 'Review' : 'Start' }}
+            </button>
+            } @else {
+            <div class="locked-msg">
+              <mat-icon>lock</mat-icon>
+              <span>Complete previous</span>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-controls">
+    <button mat-fab class="nav-btn nav-left" [disabled]="!canGoPrev()" (click)="navigate('prev')">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <button mat-fab class="nav-btn nav-right" [disabled]="!canGoNext()" (click)="navigate('next')">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>
