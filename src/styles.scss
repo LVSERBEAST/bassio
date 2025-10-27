@@ -5,17 +5,17 @@
 
 :root {
   @include mat.theme(theme.$dark-theme);
-  
-  // Component overrides
-  @include mat.button-overrides((
-    filled-container-shape: 8px,
-    outlined-container-shape: 8px,
-  ));
-}
 
-// Toolbar override
-mat-toolbar {
-  background-color: rgba(51, 48, 45, 0.95) !important;
+  // Component overrides
+  @include mat.button-overrides(
+    (
+      filled-container-shape: 8px,
+      outlined-container-shape: 8px,
+    )
+  );
+
+  --mat-menu-container-color: #2c2926;
+  --mat-sys-surface-container: #2c2926;
 }
 
 * {
@@ -29,6 +29,34 @@ body {
   background: #0d0c0b;
 }
 
-html, body {
+html,
+body {
   height: 100%;
+}
+
+a {
+  text-decoration: none;;
+}
+
+// Toolbar override
+mat-toolbar {
+  background-color: rgba(51, 48, 45, 0.95) !important;
+}
+
+mat-menu-panel {
+  background: linear-gradient(145deg, #2c2926, #1e1b19) !important;
+}
+
+.mat-mdc-menu-item {
+  color: rgba(247, 239, 235, 0.9) !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+
+  &:hover {
+    background: rgba(238, 152, 0, 0.15) !important;
+  }
+}
+
+mat-option {
+  color: white !important;
 }

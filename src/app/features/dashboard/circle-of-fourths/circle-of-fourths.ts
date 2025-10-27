@@ -1,8 +1,8 @@
 import { Component, signal, computed } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 interface KeyInfo {
   id: number;
@@ -12,90 +12,102 @@ interface KeyInfo {
   angle: number;
   sharps: number;
   flats: number;
-  status: 'locked' | 'active' | 'completed';
 }
 
-type PracticeMode = 'identification' | 'scale-builder' | 'chord-navigator';
+type ExerciseType = 
+  | 'circle-nav'
+  | 'scale-patterns'
+  | 'root-finding'
+  | 'interval-practice'
+  | 'chord-tones'
+  | 'walking-bass';
+
+interface Exercise {
+  id: ExerciseType;
+  name: string;
+  description: string;
+}
 
 @Component({
   selector: 'circle-of-fourths',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, MatTabsModule, MatProgressBarModule],
+  imports: [
+    MatButtonModule, 
+    MatIconModule, 
+    MatSelectModule,
+    MatFormFieldModule
+  ],
   templateUrl: './circle-of-fourths.html',
   styleUrls: ['./circle-of-fourths.scss'],
 })
 export class CircleOfFourths {
-  Math = Math; // Expose Math to template
+  Math = Math;
   
-  currentMode = signal<PracticeMode>('identification');
   selectedKey = signal<number>(0);
-  streak = signal(0);
-  timer = signal(0);
-
-  private modes: PracticeMode[] = ['identification', 'scale-builder', 'chord-navigator'];
+  currentExercise = signal<ExerciseType>('scale-patterns');
+  octavePattern = signal<1 | 2>(1);
+  intervalType = signal<'roots' | '3rds' | '5ths' | 'triads'>('roots');
+  
+  exercises = signal<Exercise[]>([
+    { id: 'circle-nav', name: 'Circle Navigation', description: 'Navigate the circle by intervals' },
+    { id: 'scale-patterns', name: 'Scale Patterns', description: 'Learn and play scale fingerings' },
+    { id: 'root-finding', name: 'Root Finding', description: 'Find all roots in the current key' },
+    { id: 'interval-practice', name: 'Interval Practice', description: 'Practice intervals and triads' },
+    { id: 'chord-tones', name: 'Chord Tones', description: 'Play chord tones over changes' },
+    { id: 'walking-bass', name: 'Walking Bass', description: 'Build walking bass lines' },
+  ]);
 
   keys = signal<KeyInfo[]>([
-    { id: 0, name: 'C', major: 'C Major', minor: 'A minor', angle: 0, sharps: 0, flats: 0, status: 'active' },
-    { id: 1, name: 'G', major: 'G Major', minor: 'E minor', angle: 30, sharps: 1, flats: 0, status: 'active' },
-    { id: 2, name: 'D', major: 'D Major', minor: 'B minor', angle: 60, sharps: 2, flats: 0, status: 'active' },
-    { id: 3, name: 'A', major: 'A Major', minor: 'F# minor', angle: 90, sharps: 3, flats: 0, status: 'locked' },
-    { id: 4, name: 'E', major: 'E Major', minor: 'C# minor', angle: 120, sharps: 4, flats: 0, status: 'locked' },
-    { id: 5, name: 'B', major: 'B Major', minor: 'G# minor', angle: 150, sharps: 5, flats: 0, status: 'locked' },
-    { id: 6, name: 'F#/Gb', major: 'F# Major', minor: 'D# minor', angle: 180, sharps: 6, flats: 6, status: 'locked' },
-    { id: 7, name: 'Db', major: 'Db Major', minor: 'Bb minor', angle: 210, sharps: 0, flats: 5, status: 'locked' },
-    { id: 8, name: 'Ab', major: 'Ab Major', minor: 'F minor', angle: 240, sharps: 0, flats: 4, status: 'locked' },
-    { id: 9, name: 'Eb', major: 'Eb Major', minor: 'C minor', angle: 270, sharps: 0, flats: 3, status: 'locked' },
-    { id: 10, name: 'Bb', major: 'Bb Major', minor: 'G minor', angle: 300, sharps: 0, flats: 2, status: 'locked' },
-    { id: 11, name: 'F', major: 'F Major', minor: 'D minor', angle: 330, sharps: 0, flats: 1, status: 'locked' },
+    { id: 0, name: 'C', major: 'C Major', minor: 'Am', angle: 0, sharps: 0, flats: 0 },
+    { id: 1, name: 'G', major: 'G Major', minor: 'Em', angle: 30, sharps: 1, flats: 0 },
+    { id: 2, name: 'D', major: 'D Major', minor: 'Bm', angle: 60, sharps: 2, flats: 0 },
+    { id: 3, name: 'A', major: 'A Major', minor: 'F#m', angle: 90, sharps: 3, flats: 0 },
+    { id: 4, name: 'E', major: 'E Major', minor: 'C#m', angle: 120, sharps: 4, flats: 0 },
+    { id: 5, name: 'B', major: 'B Major', minor: 'G#m', angle: 150, sharps: 5, flats: 0 },
+    { id: 6, name: 'F#/Gb', major: 'F# Major', minor: 'D#m', angle: 180, sharps: 6, flats: 6 },
+    { id: 7, name: 'Db', major: 'Db Major', minor: 'Bbm', angle: 210, sharps: 0, flats: 5 },
+    { id: 8, name: 'Ab', major: 'Ab Major', minor: 'Fm', angle: 240, sharps: 0, flats: 4 },
+    { id: 9, name: 'Eb', major: 'Eb Major', minor: 'Cm', angle: 270, sharps: 0, flats: 3 },
+    { id: 10, name: 'Bb', major: 'Bb Major', minor: 'Gm', angle: 300, sharps: 0, flats: 2 },
+    { id: 11, name: 'F', major: 'F Major', minor: 'Dm', angle: 330, sharps: 0, flats: 1 },
   ]);
 
   currentKey = computed(() => this.keys()[this.selectedKey()]);
   
+  currentExerciseInfo = computed(() => 
+    this.exercises().find(e => e.id === this.currentExercise())
+  );
+
   relatedKeys = computed(() => {
     const idx = this.selectedKey();
     const keys = this.keys();
     return {
       fourthUp: keys[(idx + 1) % 12],
       fourthDown: keys[(idx - 1 + 12) % 12],
-      relativeMajor: this.currentKey().major,
       relativeMinor: this.currentKey().minor,
     };
   });
 
-  completedCount = computed(() => 
-    this.keys().filter(k => k.status === 'completed').length
-  );
-
-  progress = computed(() => 
-    Math.round((this.completedCount() / 12) * 100)
-  );
-
   selectKey(id: number) {
-    const key = this.keys()[id];
-    if (key.status !== 'locked') {
-      this.selectedKey.set(id);
-    }
+    this.selectedKey.set(id);
   }
 
-  onModeChange(index: number) {
-    this.currentMode.set(this.modes[index]);
+  changeExercise(exerciseId: ExerciseType) {
+    this.currentExercise.set(exerciseId);
   }
 
-  checkAnswer() {
-    console.log('Check answer for mode:', this.currentMode());
+  startExercise() {
+    // This will send pattern to note-highway component
+    console.log('Starting exercise:', this.currentExercise());
+    console.log('Key:', this.currentKey().name);
+    console.log('Octave pattern:', this.octavePattern());
   }
 
-  playKey() {
-    console.log('Playing:', this.currentKey().name);
+  nextExercise() {
+    console.log('Next exercise iteration');
   }
 
-  nextKey() {
-    const current = this.selectedKey();
-    const next = (current + 1) % 12;
-    this.selectKey(next);
-  }
-
-  skipKey() {
-    this.nextKey();
+  skipExercise() {
+    console.log('Skip current exercise');
   }
 }

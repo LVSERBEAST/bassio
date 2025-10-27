@@ -12,6 +12,5 @@ export const routes: Routes = [
       { path: 'circle-of-fourths', component: CircleOfFourths },
     ],
   },
-
   { path: '**', redirectTo: '' },
 ];
