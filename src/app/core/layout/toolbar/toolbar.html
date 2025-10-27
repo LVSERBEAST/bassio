@@ -34,7 +34,7 @@
   </div>
 
   <div class="toolbar-end">
-    <button mat-button class="toolbar-btn" (click)="onSkillCheck()">Skill Check</button>
+    <a routerLink="/dashboard"><button mat-button class="toolbar-btn">Learn</button></a>
     <button mat-button class="toolbar-btn" [matMenuTriggerFor]="menu">Practice</button>
     <mat-menu #menu="matMenu" id="menu">
       <a routerLink="/circle-of-fourths"><button mat-menu-item>Circle of Fourths</button></a>

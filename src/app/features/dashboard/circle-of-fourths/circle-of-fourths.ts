@@ -106,8 +106,4 @@ export class CircleOfFourths {
   nextExercise() {
     console.log('Next exercise iteration');
   }
-
-  skipExercise() {
-    console.log('Skip current exercise');
-  }
 }
