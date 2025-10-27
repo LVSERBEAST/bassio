@@ -64,3 +64,17 @@ mat-menu-panel {
 mat-option {
   color: white !important;
 }
+
+.mat-mdc-form-field-focus-overlay {
+  background: transparent;
+}
+
+.mdc-notched-outline__leading,
+.mdc-notched-outline__notch,
+.mdc-notched-outline__trailing {
+  border-color: rgba(87, 83, 78, 0.5) !important;
+}
+
+.mat-mdc-select-value {
+  color: #f7efeb;
+}

@@ -91,7 +91,6 @@
   <div class="exercise-panel">
     <!-- Exercise Selector -->
     <div class="exercise-header">
-      <h2>Practice</h2>
       <mat-form-field appearance="outline">
         <mat-select [value]="currentExercise()" (selectionChange)="changeExercise($event.value)">
           @for (ex of exercises(); track ex.id) {

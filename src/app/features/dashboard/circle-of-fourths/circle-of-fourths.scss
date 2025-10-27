@@ -1,9 +1,8 @@
 .practice-container {
-  height: 100%; // toolbar + note-highway
   background: radial-gradient(ellipse at top, #1e1b19 0%, #0d0c0b 100%);
+  flex: 1;
   display: grid;
   grid-template-columns: 65% 35%;
-  overflow: hidden;
 }
 
 /* Circle Section */
@@ -11,50 +10,50 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  height: calc(100vh - 13rem);
 }
 
 .circle-svg {
   width: 100%;
-  max-width: 600px;
-  height: auto;
+  height: 100%;
   filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4));
-  
+
   .key-segment {
     cursor: pointer;
     transition: all 0.3s ease;
-    
+
     &:hover {
       opacity: 0.8;
     }
-    
+
     &.selected path {
       stroke: #ee9800;
       stroke-width: 2.5;
     }
   }
-  
+
   .key-label {
     font-size: 1.125rem;
     font-weight: 700;
     fill: #f7efeb;
     pointer-events: none;
-    
+
     &.major {
       font-size: 1.5rem;
     }
-    
+
     &.minor {
       font-size: 1rem;
       fill: rgba(247, 239, 235, 0.7);
     }
   }
-  
+
   .center-label {
     font-size: 2.5rem;
     font-weight: 800;
     fill: #ee9800;
   }
-  
+
   .center-sublabel {
     font-size: 1rem;
     font-weight: 600;
@@ -67,54 +66,25 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 2rem;
+  padding: 1rem;
   background: linear-gradient(145deg, rgba(44, 41, 38, 0.8), rgba(30, 27, 25, 0.8));
   border-left: 2px solid rgba(87, 83, 78, 0.3);
-  box-shadow: 
-    -4px 0 20px rgba(0, 0, 0, 0.5),
-    inset 1px 0 0 rgba(87, 83, 78, 0.2);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5), inset 1px 0 0 rgba(87, 83, 78, 0.2);
   overflow-y: auto;
 }
 
 .exercise-header {
-  h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #f7efeb;
-    margin: 0 0 1rem;
-  }
-  
   mat-form-field {
     width: 100%;
-    
-    ::ng-deep {
-      .mat-mdc-text-field-wrapper {
-        background: rgba(26, 25, 23, 0.5);
-      }
-      
-      .mat-mdc-form-field-focus-overlay {
-        background: transparent;
-      }
-      
-      .mdc-notched-outline__leading,
-      .mdc-notched-outline__notch,
-      .mdc-notched-outline__trailing {
-        border-color: rgba(87, 83, 78, 0.5) !important;
-      }
-      
-      .mat-mdc-select-value {
-        color: #f7efeb;
-      }
-    }
   }
 }
 
 .exercise-instructions {
-  padding: 1rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   background: rgba(238, 152, 0, 0.1);
   border: 1px solid rgba(238, 152, 0, 0.3);
   border-radius: 0.75rem;
-  
+
   p {
     margin: 0;
     color: rgba(247, 239, 235, 0.9);
@@ -145,14 +115,14 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-  
+
   button {
     flex: 1;
     min-width: 0;
     font-size: 0.875rem;
     border: 2px solid rgba(87, 83, 78, 0.5) !important;
     color: rgba(247, 239, 235, 0.8) !important;
-    
+
     &.active {
       border-color: #ee9800 !important;
       background: rgba(238, 152, 0, 0.2) !important;
@@ -172,7 +142,7 @@
   display: flex;
   justify-content: space-around;
   gap: 0.5rem;
-  
+
   .chord {
     flex: 1;
     padding: 0.75rem;
@@ -200,7 +170,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
+
   .label {
     font-size: 0.875rem;
     font-weight: 600;
@@ -208,7 +178,7 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
-  
+
   .value {
     font-size: 1rem;
     font-weight: 700;
@@ -220,28 +190,26 @@
   display: flex;
   gap: 1rem;
   margin-top: auto;
-  
+
   button {
     flex: 1;
     height: 3rem;
     font-weight: 700;
     font-size: 1rem;
-    
+
     mat-icon {
       margin-right: 0.5rem;
     }
-    
+
     &[mat-stroked-button] {
       border: 2px solid rgba(87, 83, 78, 0.5) !important;
       color: rgba(247, 239, 235, 0.9) !important;
     }
-    
+
     &[mat-flat-button] {
       background: linear-gradient(145deg, #ee9800, #d67e00) !important;
       color: #1e1b19 !important;
-      box-shadow: 
-        0 4px 16px rgba(238, 152, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+      box-shadow: 0 4px 16px rgba(238, 152, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
     }
   }
 }
@@ -258,11 +226,11 @@
     grid-template-columns: 1fr;
     grid-template-rows: 50% 50%;
   }
-  
+
   .circle-section {
     border-bottom: 2px solid rgba(87, 83, 78, 0.3);
   }
-  
+
   .exercise-panel {
     border-left: none;
     border-top: 2px solid rgba(87, 83, 78, 0.3);
@@ -270,15 +238,11 @@
 }
 
 @media (max-width: 768px) {
-  .practice-container {
-    height: calc(100vh - 4rem - 6rem);
-  }
-  
   .circle-section,
   .exercise-panel {
     padding: 1rem;
   }
-  
+
   .button-group button {
     flex-basis: calc(50% - 0.25rem);
   }
