@@ -6,36 +6,8 @@ export class Metronome {
   readonly isActive = signal(false);
   readonly isPlaying = signal(false);
   readonly currentBeat = signal(0);
-  readonly countOffMode = signal(false);
-  private countOffBeats = 0;
   private intervalId: number | null = null;
   private audioContext = new AudioContext();
-
-  startCountOff(): void {
-    this.countOffMode.set(true);
-    this.countOffBeats = 0;
-    this.isPlaying.set(true);
-    this.scheduleCountOff();
-  }
-
-  private scheduleCountOff(): void {
-    const interval = (60 / this.bpm()) * 1000;
-
-    const countOffSequence = () => {
-      this.playClick();
-      this.countOffBeats++;
-
-      // 1-2-1-2-3-4 pattern
-      if (this.countOffBeats < 6) {
-        setTimeout(countOffSequence, interval);
-      } else {
-        this.countOffMode.set(false);
-        this.scheduleBeats();
-      }
-    };
-
-    countOffSequence();
-  }
 
   toggle(): void {
     this.isActive.update((active) => !active);
@@ -68,16 +40,24 @@ export class Metronome {
   }
 
   private scheduleBeats(): void {
-    const interval = (60 / this.bpm()) * 1000;
-    this.playClick();
+    // Schedule clicks ahead using audio time, not setInterval
+    const scheduleAhead = 0.1; // 100ms lookahead
+    let nextBeatTime = this.audioContext.currentTime;
 
-    this.intervalId = setInterval(() => {
-      this.currentBeat.update((b) => (b + 1) % 4);
-      this.playClick();
-    }, interval) as unknown as number;
+    const scheduler = () => {
+      while (nextBeatTime < this.audioContext.currentTime + scheduleAhead) {
+        this.playClick(nextBeatTime);
+        nextBeatTime += 60 / this.bpm();
+        this.currentBeat.update((b) => (b + 1) % 4);
+      }
+      if (this.isPlaying()) {
+        setTimeout(scheduler, 25);
+      }
+    };
+    scheduler();
   }
 
-  private playClick(): void {
+  private playClick(time: number): void {
     const osc = this.audioContext.createOscillator();
     const gain = this.audioContext.createGain();
 
@@ -88,8 +68,8 @@ export class Metronome {
     osc.frequency.value = isDownbeat ? 1000 : 800;
     gain.gain.value = isDownbeat ? 0.3 : 0.15;
 
-    osc.start();
-    gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.05);
-    osc.stop(this.audioContext.currentTime + 0.05);
+    osc.start(time);
+    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+    osc.stop(time + 0.05);
   }
 }

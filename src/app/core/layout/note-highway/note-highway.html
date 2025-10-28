@@ -32,7 +32,9 @@
     </div>
     } @if (player.countdown() > 0) {
     <div class="countdown-overlay">
-      <div class="countdown-number">{{ player.countdown() }}</div>
+      <div class="countdown-number">
+        {{ player.countdown() === -1 ? 'Go!' : player.countdown() }}
+      </div>
     </div>
     }
   </div>

@@ -6,6 +6,7 @@ export interface Note {
   string: number;
   fret: number;
   position: number;
+  spawnBeat: number; // NEW
   active: boolean;
   state: 'approaching' | 'hit' | 'miss' | 'perfect';
 }
@@ -22,26 +23,43 @@ export class Player {
   readonly isPlaying = signal(false);
   readonly countdown = signal(0);
   readonly hitZoneFlash = signal(false);
-  readonly beatMarkers = signal<Array<{ position: number; id: string }>>([]);
+  readonly beatMarkers = signal<Array<{ position: number; id: string; measureNumber: number }>>([]);
   hitZonePosition = signal(15);
+  private audioContext = new AudioContext();
+  private exerciseStartTime = 0;
+  private readonly pixelsPerBeat = 50;
 
   private rafId: number | null = null;
   private readonly pixelsPerSecond = 20; // Slower scroll
 
   async playPattern(pattern: Pattern, hitZonePosition: number): Promise<void> {
     this.clear();
+    const beatDuration = (60 / pattern.bpm) * 1000;
 
-    // Count-off with metronome if active
     if (this.metronome.isActive()) {
       this.metronome.setBpm(pattern.bpm);
+      this.metronome.start(); // Just start normal beats
 
-      // 1-2-1-2-3-4 count
-      const beatDuration = (60 / pattern.bpm) * 1000;
+      // Count-off: 8 beats total
+      // Beat 1: "3"
+      this.countdown.set(3);
+      await this.delay(beatDuration);
 
-      this.metronome.start();
-      for (let i = 0; i < 6; i++) {
-        await this.delay(beatDuration);
-      }
+      // Beat 2: "2"
+      this.countdown.set(2);
+      await this.delay(beatDuration);
+
+      // Beat 3: "1"
+      this.countdown.set(1);
+      await this.delay(beatDuration);
+
+      // Beat 4: "Go!"
+      this.countdown.set(-1);
+      await this.delay(beatDuration);
+
+      // Beats 5-8: clear countdown, metronome continues
+      this.countdown.set(0);
+      await this.delay(beatDuration * 4);
     } else {
       // Regular countdown without metronome
       for (let i = 3; i > 0; i--) {
@@ -52,6 +70,7 @@ export class Player {
     }
 
     this.spawnNotes(pattern, hitZonePosition);
+    this.exerciseStartTime = this.audioContext.currentTime; // Set start time AFTER count-off
     this.start();
   }
 
@@ -85,42 +104,36 @@ export class Player {
   }
 
   private spawnNotes(pattern: Pattern, hitZonePosition: number): void {
-    const beatDuration = (60 / pattern.bpm) * 1000;
-    const pixelsPerBeat = this.pixelsPerSecond * (beatDuration / 1000);
+    const pixelsPerBeat = this.pixelsPerBeat;
 
-    // Spawn beat markers
+    // Spawn beat markers - store measure number instead of position
     const markers = [];
     for (let i = 0; i < 50; i++) {
       markers.push({
         id: `marker-${i}`,
-        position: 100 + i * pixelsPerBeat * 4, // Every 4 beats (1 measure)
+        measureNumber: i * 4, // Store beat number, not position
+        position: hitZonePosition + i * pixelsPerBeat * 4,
       });
     }
     this.beatMarkers.set(markers);
 
-    // Spawn notes
-    pattern.notes.forEach(({ string, fret, beat }) => {
-      const note: Note = {
-        id: `${Date.now()}-${string}-${fret}-${beat}`,
-        string,
-        fret,
-        position: 100,
-        active: true,
-        state: 'approaching',
-      };
+    // Spawn all notes with spawnBeat
+    const notes = pattern.notes.map(({ string, fret, beat }) => ({
+      id: `${Date.now()}-${string}-${fret}-${beat}`,
+      string,
+      fret,
+      spawnBeat: beat,
+      position: hitZonePosition + beat * pixelsPerBeat,
+      active: true,
+      state: 'approaching' as const,
+    }));
 
-      const travelDistance = 100 - hitZonePosition;
-      const travelTime = (travelDistance / this.pixelsPerSecond) * 1000;
-      const spawnDelay = beat * beatDuration - travelTime;
-
-      setTimeout(() => {
-        this.notes.update((notes) => [...notes, note]);
-      }, Math.max(0, spawnDelay));
-    });
+    this.notes.set(notes);
   }
 
   private start(): void {
     if (this.isPlaying()) return;
+    this.exerciseStartTime = this.audioContext.currentTime;
     this.isPlaying.set(true);
     this.animate();
   }
@@ -133,32 +146,42 @@ export class Player {
   private animate(): void {
     if (!this.isPlaying()) return;
 
-    const deltaTime = 1 / 60;
-    const pixelsToMove = this.pixelsPerSecond * deltaTime;
+    // Calculate current beat based on audio time
+    const elapsed = this.audioContext.currentTime - this.exerciseStartTime;
+    const currentBeat = elapsed * (this.getCurrentBpm() / 60);
 
-    // Update notes
+    // Update notes based on beat position
     this.notes.update((notes) =>
       notes
         .map((n) => {
-          const newPos = n.position - pixelsToMove;
+          const beatsSinceSpawn = currentBeat - n.spawnBeat;
+          const newPos = this.hitZonePosition() - beatsSinceSpawn * this.pixelsPerBeat;
 
-          if (n.state === 'approaching' && newPos < 10) {
+          if (n.state === 'approaching' && newPos < this.hitZonePosition() - 2) {
             return { ...n, position: newPos, state: 'miss' as const };
           }
 
           return { ...n, position: newPos };
         })
-        .filter((n) => n.position > -10)
+        .filter((n) => n.position > -20)
     );
 
     // Update beat markers
     this.beatMarkers.update((markers) =>
       markers
-        .map((m) => ({ ...m, position: m.position - pixelsToMove }))
-        .filter((m) => m.position > -10)
+        .map((m) => ({
+          ...m,
+          position: this.hitZonePosition() + (m.measureNumber - currentBeat) * this.pixelsPerBeat,
+        }))
+        .filter((m) => m.position > -20 && m.position < 120)
     );
 
     this.rafId = requestAnimationFrame(() => this.animate());
+  }
+
+  private getCurrentBpm(): number {
+    // Get from metronome or last pattern
+    return this.metronome.bpm();
   }
 
   private flashHitZone(): void {
