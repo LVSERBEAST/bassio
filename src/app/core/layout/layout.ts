@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Toolbar } from './toolbar/toolbar';
 import { RouterOutlet } from '@angular/router';
-import { NoteHighway } from './fret-board/note-highway';
+import { NoteHighway } from './note-highway/note-highway';
 
 @Component({
   selector: 'layout',

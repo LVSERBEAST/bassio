@@ -1,8 +1,11 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { Pattern, Player } from '../../../core/services/player';
+import { AudioInput } from '../../../core/services/audio-input';
+import { Metronome } from '../../../core/services/metronome';
 
 interface KeyInfo {
   id: number;
@@ -14,7 +17,7 @@ interface KeyInfo {
   flats: number;
 }
 
-type ExerciseType = 
+type ExerciseType =
   | 'circle-nav'
   | 'scale-patterns'
   | 'root-finding'
@@ -31,28 +34,37 @@ interface Exercise {
 @Component({
   selector: 'circle-of-fourths',
   standalone: true,
-  imports: [
-    MatButtonModule, 
-    MatIconModule, 
-    MatSelectModule,
-    MatFormFieldModule
-  ],
+  imports: [MatButtonModule, MatIconModule, MatSelectModule, MatFormFieldModule],
   templateUrl: './circle-of-fourths.html',
   styleUrls: ['./circle-of-fourths.scss'],
 })
 export class CircleOfFourths {
   Math = Math;
-  
+  audioInput = inject(AudioInput);
+  player = inject(Player);
+  metronome = inject(Metronome);
   selectedKey = signal<number>(0);
   currentExercise = signal<ExerciseType>('scale-patterns');
   octavePattern = signal<1 | 2>(1);
   intervalType = signal<'roots' | '3rds' | '5ths' | 'triads'>('roots');
-  
+
   exercises = signal<Exercise[]>([
-    { id: 'circle-nav', name: 'Circle Navigation', description: 'Navigate the circle by intervals' },
-    { id: 'scale-patterns', name: 'Scale Patterns', description: 'Learn and play scale fingerings' },
+    {
+      id: 'circle-nav',
+      name: 'Circle Navigation',
+      description: 'Navigate the circle by intervals',
+    },
+    {
+      id: 'scale-patterns',
+      name: 'Scale Patterns',
+      description: 'Learn and play scale fingerings',
+    },
     { id: 'root-finding', name: 'Root Finding', description: 'Find all roots in the current key' },
-    { id: 'interval-practice', name: 'Interval Practice', description: 'Practice intervals and triads' },
+    {
+      id: 'interval-practice',
+      name: 'Interval Practice',
+      description: 'Practice intervals and triads',
+    },
     { id: 'chord-tones', name: 'Chord Tones', description: 'Play chord tones over changes' },
     { id: 'walking-bass', name: 'Walking Bass', description: 'Build walking bass lines' },
   ]);
@@ -73,9 +85,9 @@ export class CircleOfFourths {
   ]);
 
   currentKey = computed(() => this.keys()[this.selectedKey()]);
-  
-  currentExerciseInfo = computed(() => 
-    this.exercises().find(e => e.id === this.currentExercise())
+
+  currentExerciseInfo = computed(() =>
+    this.exercises().find((e) => e.id === this.currentExercise())
   );
 
   relatedKeys = computed(() => {
@@ -96,14 +108,92 @@ export class CircleOfFourths {
     this.currentExercise.set(exerciseId);
   }
 
-  startExercise() {
-    // This will send pattern to note-highway component
-    console.log('Starting exercise:', this.currentExercise());
-    console.log('Key:', this.currentKey().name);
-    console.log('Octave pattern:', this.octavePattern());
+  protected async startExercise() {
+    if (!this.audioInput.isConnected()) {
+      const proceed = confirm(
+        'No audio input detected. Exercise will play but you cannot play along. Continue?'
+      );
+      if (!proceed) return;
+    }
+
+    const pattern = this.generatePattern();
+    await this.player.playPattern(pattern, this.player.hitZonePosition());
   }
 
-  nextExercise() {
-    console.log('Next exercise iteration');
+  nextExercise(): void {
+    const pattern = this.generatePattern();
+    this.player.playPattern(pattern, this.player.hitZonePosition());
+  }
+
+  private generatePattern(): Pattern {
+    const exercise = this.currentExercise();
+    const keyName = this.currentKey().name;
+
+    switch (exercise) {
+      case 'scale-patterns':
+        return this.generateScalePattern(keyName);
+      case 'root-finding':
+        return this.generateRootPattern(keyName);
+      case 'interval-practice':
+        return this.generateIntervalPattern();
+      default:
+        return { bpm: 120, notes: [] };
+    }
+  }
+
+  async toggleExercise(): Promise<void> {
+    if (this.player.isPlaying()) {
+      this.player.stop();
+    } else {
+      if (!this.audioInput.isConnected()) {
+        const proceed = confirm(
+          'No audio input detected. Exercise will play but you cannot play along. Continue?'
+        );
+        if (!proceed) return;
+      }
+
+      const pattern = this.generatePattern();
+      await this.player.playPattern(pattern, 15); // Default hit zone position
+    }
+  }
+
+  private generateScalePattern(key: string): Pattern {
+    return {
+      bpm: this.metronome.bpm(), // Use current metronome BPM
+      notes: [
+        { string: 3, fret: 8, beat: 0 },
+        { string: 3, fret: 10, beat: 1 },
+        { string: 3, fret: 12, beat: 2 },
+        { string: 3, fret: 13, beat: 3 },
+        { string: 3, fret: 15, beat: 4 },
+        { string: 2, fret: 2, beat: 5 },
+        { string: 2, fret: 4, beat: 6 },
+        { string: 2, fret: 5, beat: 7 },
+      ],
+    };
+  }
+
+  private generateRootPattern(key: string): Pattern {
+    return {
+      bpm: 120,
+      notes: [
+        { string: 3, fret: 8, beat: 0 },
+        { string: 2, fret: 3, beat: 2 },
+        { string: 1, fret: 10, beat: 4 },
+        { string: 0, fret: 5, beat: 6 },
+      ],
+    };
+  }
+
+  private generateIntervalPattern(): Pattern {
+    return {
+      bpm: 120,
+      notes: [
+        { string: 3, fret: 8, beat: 0 },
+        { string: 3, fret: 10, beat: 1 },
+        { string: 2, fret: 3, beat: 2 },
+        { string: 2, fret: 5, beat: 3 },
+      ],
+    };
   }
 }

@@ -10,14 +10,15 @@ interface NoteDetection {
 
 @Injectable({ providedIn: 'root' })
 export class AudioInput {
+  readonly isConnected = signal(false);
   readonly isActive = signal(false);
   readonly currentNote = signal<NoteDetection | null>(null);
   readonly spectrum = signal<Uint8Array>(new Uint8Array(20));
 
   private readonly destroy$ = new Subject<void>();
+  private readonly buffer = new Float32Array(8192);
   private context: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
-  private readonly buffer = new Float32Array(8192);
 
   // 4-string bass: E1=41.2Hz, A1=55Hz, D2=73.4Hz, G2=98Hz
   // 5-string adds: B0=30.87Hz
@@ -25,35 +26,42 @@ export class AudioInput {
   private readonly MAX_FREQ = 400; // Covers harmonics
 
   async start(): Promise<void> {
-    this.context = new AudioContext();
-    this.analyser = this.context.createAnalyser();
-    this.analyser.fftSize = 16384;
-    this.analyser.smoothingTimeConstant = 0.3;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          sampleRate: 48000,
+        },
+      });
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false,
-        sampleRate: 48000,
-      },
-    });
+      this.context = new AudioContext();
+      this.analyser = this.context.createAnalyser();
+      this.analyser.fftSize = 8192;
+      this.analyser.smoothingTimeConstant = 0;
 
-    const source = this.context.createMediaStreamSource(stream);
-    source.connect(this.analyser);
+      const source = this.context.createMediaStreamSource(stream);
+      source.connect(this.analyser);
 
-    interval(20)
-      .pipe(
-        takeUntil(this.destroy$),
-        map(() => {
-          const freq = this.detectPitch();
-          this.updateSpectrum();
-          return freq > 0 ? this.frequencyToNote(freq) : null;
-        })
-      )
-      .subscribe((note) => this.currentNote.set(note));
+      this.isConnected.set(true);
 
-    this.isActive.set(true);
+      interval(20)
+        .pipe(
+          takeUntil(this.destroy$),
+          map(() => {
+            const freq = this.detectPitch();
+            this.updateSpectrum();
+            return freq > 0 ? this.frequencyToNote(freq) : null;
+          })
+        )
+        .subscribe((note) => this.currentNote.set(note));
+
+      this.isActive.set(true);
+    } catch (error) {
+      this.isConnected.set(false);
+      throw new Error('No audio input available');
+    }
   }
 
   stop(): void {
@@ -62,6 +70,7 @@ export class AudioInput {
     this.context = null;
     this.analyser = null;
     this.isActive.set(false);
+    this.isConnected.set(false);
   }
 
   private detectPitch(): number {
@@ -94,7 +103,6 @@ export class AudioInput {
     const endBin = Math.floor(400 / binWidth);
     const bassRange = frequencyData.slice(startBin, endBin);
 
-    // Downsample to 20 bars
     const barData = new Uint8Array(20);
     const binsPerBar = Math.floor(bassRange.length / 20);
 

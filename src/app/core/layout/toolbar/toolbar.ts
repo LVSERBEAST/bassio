@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { RouterLink } from '@angular/router';
 import { AudioInput } from '../../services/audio-input';
+import { Metronome } from '../../services/metronome';
 
 @Component({
   selector: 'toolbar',
@@ -15,13 +16,15 @@ import { AudioInput } from '../../services/audio-input';
 })
 export class Toolbar {
   private readonly audioInput = inject(AudioInput);
+  protected readonly metronome = inject(Metronome);
   protected readonly userName = signal('Marcus');
   protected readonly tunerActive = signal(false);
-  protected readonly isAudioConnected = signal(false);
   protected readonly currentNote = signal('E');
   protected readonly centsDiff = signal(0);
   protected readonly needlePosition = signal(0);
+  protected readonly metronomeActive = computed(() => this.metronome.isActive());
 
+  protected readonly isAudioConnected = computed(() => this.audioInput.isConnected());
   protected readonly audioLevels = computed(() => {
     if (!this.audioInput.isActive()) return Array(20).fill(0);
 
@@ -44,7 +47,6 @@ export class Toolbar {
 
     effect(() => {
       this.tunerActive.set(this.audioInput.isActive());
-      this.isAudioConnected.set(this.audioInput.isActive());
     });
   }
 
@@ -52,7 +54,27 @@ export class Toolbar {
     if (this.tunerActive()) {
       this.audioInput.stop();
     } else {
-      await this.audioInput.start();
+      try {
+        await this.audioInput.start();
+      } catch (error) {
+        alert('No audio input detected. Please connect a microphone or audio interface.');
+      }
+    }
+  }
+
+  protected toggleMetronome(): void {
+    this.metronome.toggle();
+  }
+
+  protected adjustBpm(delta: number): void {
+    this.metronome.setBpm(this.metronome.bpm() + delta);
+  }
+
+  protected onBpmInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = parseInt(input.value, 10);
+    if (!isNaN(value)) {
+      this.metronome.setBpm(value);
     }
   }
 

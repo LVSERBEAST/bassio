@@ -197,9 +197,9 @@
 
     <!-- Action Buttons -->
     <div class="action-buttons">
-      <button mat-flat-button color="primary" (click)="startExercise()">
-        <mat-icon>play_arrow</mat-icon>
-        Start
+      <button mat-flat-button color="primary" (click)="toggleExercise()">
+        <mat-icon>{{ player.isPlaying() ? 'stop' : 'play_arrow' }}</mat-icon>
+        {{ player.isPlaying() ? 'Stop' : 'Start' }}
       </button>
     </div>
   </div>
