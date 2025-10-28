@@ -1,57 +1,59 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject, effect } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { RouterLink } from '@angular/router';
+import { AudioInput } from '../../services/audio-input';
 
 @Component({
   selector: 'toolbar',
   standalone: true,
   imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, RouterLink],
   templateUrl: './toolbar.html',
-  styleUrls: ['./toolbar.scss']
+  styleUrls: ['./toolbar.scss'],
 })
 export class Toolbar {
-  audioLevels = signal(Array.from({ length: 20 }, () => Math.random() * 100));
-  userName = signal('Marcus');
-  isAudioConnected = signal(true);
-  
-  tunerActive = signal(false);
-  currentNote = signal('E');
-  centsDiff = signal(12);
+  private readonly audioInput = inject(AudioInput);
+  protected readonly userName = signal('Marcus');
+  protected readonly tunerActive = signal(false);
+  protected readonly isAudioConnected = signal(false);
+  protected readonly currentNote = signal('E');
+  protected readonly centsDiff = signal(0);
+  protected readonly needlePosition = signal(0);
 
-  needlePosition = computed(() => {
-    const cents = this.centsDiff();
-    return Math.max(0, Math.min(100, 50 + cents));
+  protected readonly audioLevels = computed(() => {
+    if (!this.audioInput.isActive()) return Array(20).fill(0);
+
+    const spectrum = this.audioInput.spectrum();
+    const hasNote = this.audioInput.currentNote() !== null;
+    const boost = hasNote ? 2.0 : 1.2; // 2x when note, 1.2x baseline
+
+    return Array.from(spectrum).map((val) => Math.min(100, (val / 255) * 100 * boost));
   });
 
   constructor() {
-    setInterval(() => {
-      this.audioLevels.set(Array.from({ length: 20 }, () => Math.random() * 100));
-    }, 50);
-    
-    setInterval(() => {
-      if (this.tunerActive()) {
-        this.centsDiff.set((Math.random() - 0.5) * 100);
-        if (Math.random() < 0.08) {
-          const notes = ['E', 'A', 'D', 'G', 'B', 'e'];
-          this.currentNote.set(notes[Math.floor(Math.random() * notes.length)]);
-        }
+    effect(() => {
+      const detected = this.audioInput.currentNote();
+      if (detected) {
+        this.currentNote.set(detected.note);
+        this.centsDiff.set(detected.cents);
+        this.needlePosition.set(Math.max(0, Math.min(100, 50 + detected.cents)));
       }
-    }, 250);
+    });
+
+    effect(() => {
+      this.tunerActive.set(this.audioInput.isActive());
+      this.isAudioConnected.set(this.audioInput.isActive());
+    });
   }
 
-  toggleTuner() {
-    this.tunerActive.update(active => !active);
-  }
-
-  onPractice(option: string) {
-    console.log(`Practice: ${option}`);
-  }
-
-  onSkillCheck() {
-    console.log('Skill check');
+  protected async toggleTuner(): Promise<void> {
+    if (this.tunerActive()) {
+      this.audioInput.stop();
+    } else {
+      await this.audioInput.start();
+    }
   }
 
   onUserClick() {
