@@ -125,6 +125,17 @@
     animation: note-hit-miss 0.3s ease-out forwards;
   }
 
+  &.sustained {
+    border-radius: 1.75rem;
+    width: auto; // Override fixed width
+    min-width: 3.5rem;
+    padding: 0 1rem;
+
+    &.sustain-hitting {
+      animation: sustained-wiggle 0.2s ease-in-out infinite;
+    }
+  }
+
   .fret-num {
     font-size: 1.25rem;
     font-weight: 800;
@@ -166,6 +177,19 @@
   100% {
     transform: translateY(-50%) scale(0.5);
     opacity: 0;
+  }
+}
+
+@keyframes sustained-wiggle {
+  0%,
+  100% {
+    transform: translateY(-50%) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-50%) scale(1.03) rotate(-1deg);
+  }
+  75% {
+    transform: translateY(-50%) scale(1.03) rotate(1deg);
   }
 }
 

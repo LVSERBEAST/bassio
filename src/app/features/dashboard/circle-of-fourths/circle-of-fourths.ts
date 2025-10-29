@@ -1,11 +1,9 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, DestroyRef } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { Pattern, Player } from '../../../core/services/player';
-import { AudioInput } from '../../../core/services/audio-input';
-import { Metronome } from '../../../core/services/metronome';
+import { Sequencer, Sequence } from '../../../core/services/sequencer';
 
 interface KeyInfo {
   id: number;
@@ -40,9 +38,9 @@ interface Exercise {
 })
 export class CircleOfFourths {
   Math = Math;
-  audioInput = inject(AudioInput);
-  player = inject(Player);
-  metronome = inject(Metronome);
+  protected readonly sequencer = inject(Sequencer);
+  private readonly destroyRef = inject(DestroyRef);
+
   selectedKey = signal<number>(0);
   currentExercise = signal<ExerciseType>('scale-patterns');
   octavePattern = signal<1 | 2>(1);
@@ -100,6 +98,12 @@ export class CircleOfFourths {
     };
   });
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.sequencer.stop();
+    });
+  }
+
   selectKey(id: number) {
     this.selectedKey.set(id);
   }
@@ -108,58 +112,32 @@ export class CircleOfFourths {
     this.currentExercise.set(exerciseId);
   }
 
-  protected async startExercise() {
-    if (!this.audioInput.isConnected()) {
-      const proceed = confirm(
-        'No audio input detected. Exercise will play but you cannot play along. Continue?'
-      );
-      if (!proceed) return;
+  async toggleExercise(): Promise<void> {
+    if (this.sequencer.isPlaying()) {
+      this.sequencer.stop();
+    } else {
+      const sequence = this.generateSequence();
+      await this.sequencer.startExercise(sequence, 15);
     }
-
-    const pattern = this.generatePattern();
-    await this.player.playPattern(pattern, this.player.hitZonePosition());
   }
 
-  nextExercise(): void {
-    const pattern = this.generatePattern();
-    this.player.playPattern(pattern, this.player.hitZonePosition());
-  }
-
-  private generatePattern(): Pattern {
+  private generateSequence(): Sequence {
     const exercise = this.currentExercise();
-    const keyName = this.currentKey().name;
 
     switch (exercise) {
       case 'scale-patterns':
-        return this.generateScalePattern(keyName);
+        return this.generateScalePattern();
       case 'root-finding':
-        return this.generateRootPattern(keyName);
+        return this.generateRootPattern();
       case 'interval-practice':
         return this.generateIntervalPattern();
       default:
-        return { bpm: 120, notes: [] };
+        return { notes: [] };
     }
   }
 
-  async toggleExercise(): Promise<void> {
-    if (this.player.isPlaying()) {
-      this.player.stop();
-    } else {
-      if (!this.audioInput.isConnected()) {
-        const proceed = confirm(
-          'No audio input detected. Exercise will play but you cannot play along. Continue?'
-        );
-        if (!proceed) return;
-      }
-
-      const pattern = this.generatePattern();
-      await this.player.playPattern(pattern, 15); // Default hit zone position
-    }
-  }
-
-  private generateScalePattern(key: string): Pattern {
+  private generateScalePattern(): Sequence {
     return {
-      bpm: this.metronome.bpm(), // Use current metronome BPM
       notes: [
         { string: 3, fret: 8, beat: 0 },
         { string: 3, fret: 10, beat: 1 },
@@ -173,9 +151,8 @@ export class CircleOfFourths {
     };
   }
 
-  private generateRootPattern(key: string): Pattern {
+  private generateRootPattern(): Sequence {
     return {
-      bpm: 120,
       notes: [
         { string: 3, fret: 8, beat: 0 },
         { string: 2, fret: 3, beat: 2 },
@@ -185,9 +162,8 @@ export class CircleOfFourths {
     };
   }
 
-  private generateIntervalPattern(): Pattern {
+  private generateIntervalPattern(): Sequence {
     return {
-      bpm: 120,
       notes: [
         { string: 3, fret: 8, beat: 0 },
         { string: 3, fret: 10, beat: 1 },

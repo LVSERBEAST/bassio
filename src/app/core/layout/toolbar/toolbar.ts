@@ -6,6 +6,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { RouterLink } from '@angular/router';
 import { AudioInput } from '../../services/audio-input';
 import { Metronome } from '../../services/metronome';
+import { Sequencer } from '../../services/sequencer';
+import { Tempo } from '../../services/tempo';
 
 @Component({
   selector: 'toolbar',
@@ -17,12 +19,16 @@ import { Metronome } from '../../services/metronome';
 export class Toolbar {
   private readonly audioInput = inject(AudioInput);
   protected readonly metronome = inject(Metronome);
+  protected readonly tempo = inject(Tempo);
+  protected readonly sequencer = inject(Sequencer);
+  
   protected readonly userName = signal('Marcus');
   protected readonly tunerActive = signal(false);
   protected readonly currentNote = signal('E');
   protected readonly centsDiff = signal(0);
   protected readonly needlePosition = signal(0);
   protected readonly metronomeActive = computed(() => this.metronome.isActive());
+  protected readonly bpmLocked = computed(() => this.sequencer.isPlaying());
 
   protected readonly isAudioConnected = computed(() => this.audioInput.isConnected());
   protected readonly audioLevels = computed(() => {
@@ -30,7 +36,7 @@ export class Toolbar {
 
     const spectrum = this.audioInput.spectrum();
     const hasNote = this.audioInput.currentNote() !== null;
-    const boost = hasNote ? 2.0 : 1.2; // 2x when note, 1.2x baseline
+    const boost = hasNote ? 2.0 : 1.2;
 
     return Array.from(spectrum).map((val) => Math.min(100, (val / 255) * 100 * boost));
   });
@@ -67,14 +73,18 @@ export class Toolbar {
   }
 
   protected adjustBpm(delta: number): void {
-    this.metronome.setBpm(this.metronome.bpm() + delta);
+    if (!this.bpmLocked()) {
+      this.tempo.setBpm(this.tempo.bpm() + delta);
+    }
   }
 
   protected onBpmInput(event: Event): void {
+    if (this.bpmLocked()) return;
+
     const input = event.target as HTMLInputElement;
     const value = parseInt(input.value, 10);
     if (!isNaN(value)) {
-      this.metronome.setBpm(value);
+      this.tempo.setBpm(value);
     }
   }
 

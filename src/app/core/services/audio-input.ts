@@ -20,10 +20,32 @@ export class AudioInput {
   private context: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
 
-  // 4-string bass: E1=41.2Hz, A1=55Hz, D2=73.4Hz, G2=98Hz
-  // 5-string adds: B0=30.87Hz
   private readonly MIN_FREQ = 38;
-  private readonly MAX_FREQ = 400; // Covers harmonics
+  private readonly MAX_FREQ = 400;
+
+  constructor() {
+    this.attemptConnection();
+    this.setupDeviceChangeListener();
+  }
+
+  private async attemptConnection(): Promise<void> {
+    try {
+      await this.start();
+      this.isConnected.set(true);
+    } catch {
+      this.isConnected.set(false);
+    }
+  }
+
+  private setupDeviceChangeListener(): void {
+    if (navigator.mediaDevices) {
+      navigator.mediaDevices.addEventListener('devicechange', () => {
+        if (!this.isConnected()) {
+          this.attemptConnection();
+        }
+      });
+    }
+  }
 
   async start(): Promise<void> {
     try {
@@ -70,7 +92,6 @@ export class AudioInput {
     this.context = null;
     this.analyser = null;
     this.isActive.set(false);
-    this.isConnected.set(false);
   }
 
   private detectPitch(): number {
@@ -81,7 +102,7 @@ export class AudioInput {
       this.buffer.reduce((sum, val) => sum + val * val, 0) / this.buffer.length
     );
 
-    if (rms < 0.00001) return -1; // Lower threshold for bass
+    if (rms < 0.00001) return -1;
 
     const minSamples = Math.floor(this.context.sampleRate / this.MAX_FREQ);
     const maxSamples = Math.floor(this.context.sampleRate / this.MIN_FREQ);
@@ -96,7 +117,6 @@ export class AudioInput {
     const frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
     this.analyser.getByteFrequencyData(frequencyData);
 
-    // Focus on bass range (30-400Hz)
     const nyquist = this.context!.sampleRate / 2;
     const binWidth = nyquist / frequencyData.length;
     const startBin = Math.floor(30 / binWidth);
@@ -132,7 +152,6 @@ export class AudioInput {
 
     if (energy === 0) return { offset: -1, correlation: 0 };
 
-    // Parabolic interpolation for sub-sample precision
     for (let offset = minOffset; offset < Math.min(maxOffset, size); offset++) {
       let sum = 0;
       for (let i = 0; i < size; i++) {

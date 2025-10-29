@@ -7,11 +7,15 @@
     </div>
     } @for (marker of beatGrid(); track marker.id) {
     <div class="beat-marker" [style.left.%]="marker.position">
-      <span class="beat-number">1</span>
+      <span class="beat-number">{{ marker.beatNumber }}</span>
     </div>
     }
 
-    <div class="hit-zone" [style.left.%]="hitZonePosition()" [class.flash]="player.hitZoneFlash()">
+    <div
+      class="hit-zone"
+      [style.left.%]="hitZonePosition()"
+      [class.flash]="sequencer.hitZoneFlash()"
+    >
       <div class="drag-handle" (mousedown)="onDragStart($event)">
         <span class="grip-line"></span>
         <span class="grip-line"></span>
@@ -25,15 +29,18 @@
       [class.approaching]="note.state === 'approaching'"
       [class.perfect]="note.state === 'perfect'"
       [class.miss]="note.state === 'miss'"
+      [class.sustained]="note.duration"
+      [class.sustain-hitting]="note.sustainHitting"
+      [style.width]="note.duration ? note.duration * sequencer.pixelsPerBeat() + 'vw' : '3.5rem'"
       [style.left.%]="note.position"
       [style.top]="'calc(' + note.string * 25 + '% + 0.75rem)'"
     >
       <span class="fret-num">{{ note.fret }}</span>
     </div>
-    } @if (player.countdown() !== 0) {
+    } @if (sequencer.countdownDisplay()) {
     <div class="countdown-overlay">
       <div class="countdown-number">
-        {{ player.countdown() === -1 ? 'Go!' : player.countdown() }}
+        {{ sequencer.countdownDisplay() }}
       </div>
     </div>
     }

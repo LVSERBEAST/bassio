@@ -33,11 +33,12 @@
     </div>
   </div>
 
-  <div class="metronome-module" [class.active]="metronome.isPlaying()">
+  <div class="metronome-module" [class.active]="metronomeActive()" [class.locked]="bpmLocked()">
     <div class="bpm-display">
       <input
         class="bpm-input"
-        [value]="metronome.bpm()"
+        [value]="tempo.bpm()"
+        [disabled]="bpmLocked()"
         (input)="onBpmInput($event)"
         (keydown.enter)="$event.target.blur()"
         min="40"
@@ -46,10 +47,10 @@
       <span class="bpm-label">BPM</span>
     </div>
     <div class="bpm-controls">
-      <button class="bpm-btn" (click)="adjustBpm(1)">
+      <button class="bpm-btn" (click)="adjustBpm(1)" [disabled]="bpmLocked()">
         <mat-icon>keyboard_arrow_up</mat-icon>
       </button>
-      <button class="bpm-btn" (click)="adjustBpm(-1)">
+      <button class="bpm-btn" (click)="adjustBpm(-1)" [disabled]="bpmLocked()">
         <mat-icon>keyboard_arrow_down</mat-icon>
       </button>
     </div>
