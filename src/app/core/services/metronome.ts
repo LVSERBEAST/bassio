@@ -57,7 +57,7 @@ export class Metronome {
     scheduler();
   }
 
-  private playClick(time: number): void {
+  private playClick(time: number, forceLoud = false): void {
     const osc = this.audioContext.createOscillator();
     const gain = this.audioContext.createGain();
 
@@ -65,11 +65,33 @@ export class Metronome {
     gain.connect(this.audioContext.destination);
 
     const isDownbeat = this.currentBeat() === 0;
-    osc.frequency.value = isDownbeat ? 1000 : 800;
-    gain.gain.value = isDownbeat ? 0.3 : 0.15;
+    osc.frequency.value = isDownbeat || forceLoud ? 1000 : 800;
+    gain.gain.value = isDownbeat || forceLoud ? 0.3 : 0.15;
 
     osc.start(time);
     gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
     osc.stop(time + 0.05);
+  }
+
+  startCountOff(bpm: number): void {
+    this.setBpm(bpm);
+    this.isPlaying.set(true);
+
+    const beatDuration = 60 / bpm;
+    const ctx = this.audioContext;
+    const startTime = ctx.currentTime;
+
+    // Schedule count-off pattern: 1- 2- 1234
+    this.playClick(startTime, true); // Beat 1
+    this.playClick(startTime + beatDuration * 2, true); // Beat 3
+    this.playClick(startTime + beatDuration * 4, true); // Beat 5
+    this.playClick(startTime + beatDuration * 5, true); // Beat 6
+    this.playClick(startTime + beatDuration * 6, true); // Beat 7
+    this.playClick(startTime + beatDuration * 7, true); // Beat 8
+
+    // After 8 beats, switch to regular pattern
+    setTimeout(() => {
+      this.scheduleBeats();
+    }, beatDuration * 8 * 1000);
   }
 }
