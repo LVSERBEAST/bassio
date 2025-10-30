@@ -21,7 +21,7 @@ export class Toolbar {
   protected readonly metronome = inject(Metronome);
   protected readonly tempo = inject(Tempo);
   protected readonly sequencer = inject(Sequencer);
-  
+
   protected readonly userName = signal('Marcus');
   protected readonly tunerActive = signal(false);
   protected readonly currentNote = signal('E');
@@ -50,19 +50,16 @@ export class Toolbar {
         this.needlePosition.set(Math.max(0, Math.min(100, 50 + detected.cents)));
       }
     });
-
-    effect(() => {
-      this.tunerActive.set(this.audioInput.isActive());
-    });
   }
 
   protected async toggleTuner(): Promise<void> {
-    if (this.tunerActive()) {
-      this.audioInput.stop();
-    } else {
+    this.tunerActive.update((active) => !active);
+
+    if (this.tunerActive() && !this.audioInput.isConnected()) {
       try {
         await this.audioInput.start();
       } catch (error) {
+        this.tunerActive.set(false);
         alert('No audio input detected. Please connect a microphone or audio interface.');
       }
     }

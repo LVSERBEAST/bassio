@@ -14,11 +14,12 @@ import { Sequencer } from '../../services/sequencer';
 })
 export class NoteHighway {
   sequencer = inject(Sequencer);
-  protected readonly strings = ['G', 'D', 'A', 'E'];
+  protected readonly strings = ['E', 'A', 'D', 'G']
   protected readonly notes = computed(() => this.sequencer.notes());
   private readonly isDragging = signal(false);
   protected readonly hitZonePosition = computed(() => this.sequencer.hitZonePosition());
   protected readonly beatGrid = computed(() => this.sequencer.beatMarkers());
+  protected readonly beatDuration = computed(() => 60 / this.sequencer.tempo.bpm());
 
   protected onDragStart(event: MouseEvent): void {
     if (this.sequencer.isPlaying()) return;

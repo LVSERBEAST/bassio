@@ -1,11 +1,12 @@
 import { Injectable, signal } from '@angular/core';
 import { interval, Subject, takeUntil, filter, map } from 'rxjs';
+import { BassString } from './sequencer';
 
 interface NoteDetection {
   note: string;
   frequency: number;
   cents: number;
-  string: 'E' | 'A' | 'D' | 'G';
+  string: BassString;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -102,13 +103,54 @@ export class AudioInput {
       this.buffer.reduce((sum, val) => sum + val * val, 0) / this.buffer.length
     );
 
-    if (rms < 0.00001) return -1;
+    if (rms < 0.01) return -1;
 
     const minSamples = Math.floor(this.context.sampleRate / this.MAX_FREQ);
     const maxSamples = Math.floor(this.context.sampleRate / this.MIN_FREQ);
-    const { offset, correlation } = this.findPeakOffset(minSamples, maxSamples);
+    const tau = this.yinPitch(minSamples, maxSamples);
 
-    return correlation > 0.7 ? this.context.sampleRate / offset : -1;
+    return tau > 0 ? this.context.sampleRate / tau : -1;
+  }
+
+  private yinPitch(minTau: number, maxTau: number): number {
+    const size = this.buffer.length / 2;
+    const threshold = 0.05;
+
+    // Step 1: Difference function
+    const diff = new Float32Array(maxTau);
+    for (let tau = 0; tau < maxTau; tau++) {
+      for (let i = 0; i < size; i++) {
+        const delta = this.buffer[i] - this.buffer[i + tau];
+        diff[tau] += delta * delta;
+      }
+    }
+
+    // Step 2: Cumulative mean normalized difference
+    const cmndf = new Float32Array(maxTau);
+    cmndf[0] = 1;
+    let runningSum = 0;
+
+    for (let tau = 1; tau < maxTau; tau++) {
+      runningSum += diff[tau];
+      cmndf[tau] = diff[tau] / (runningSum / tau);
+    }
+
+    // Step 3: Absolute threshold - find first minimum below threshold
+    for (let tau = minTau; tau < maxTau; tau++) {
+      if (cmndf[tau] < threshold) {
+        // Parabolic interpolation for sub-sample accuracy
+        let betterTau = tau;
+        if (tau > 0 && tau < maxTau - 1) {
+          const s0 = cmndf[tau - 1];
+          const s1 = cmndf[tau];
+          const s2 = cmndf[tau + 1];
+          betterTau = tau + (s2 - s0) / (2 * (2 * s1 - s2 - s0));
+        }
+        return betterTau;
+      }
+    }
+
+    return -1; // No pitch found
   }
 
   private updateSpectrum(): void {
@@ -137,44 +179,12 @@ export class AudioInput {
     this.spectrum.set(barData);
   }
 
-  private findPeakOffset(
-    minOffset: number,
-    maxOffset: number
-  ): { offset: number; correlation: number } {
-    let bestOffset = -1;
-    let bestCorrelation = 0;
-    const size = this.buffer.length / 2;
-
-    let energy = 0;
-    for (let i = 0; i < size; i++) {
-      energy += this.buffer[i] * this.buffer[i];
-    }
-
-    if (energy === 0) return { offset: -1, correlation: 0 };
-
-    for (let offset = minOffset; offset < Math.min(maxOffset, size); offset++) {
-      let sum = 0;
-      for (let i = 0; i < size; i++) {
-        sum += this.buffer[i] * this.buffer[i + offset];
-      }
-
-      const correlation = sum / energy;
-
-      if (correlation > bestCorrelation) {
-        bestCorrelation = correlation;
-        bestOffset = offset;
-      }
-    }
-
-    return { offset: bestOffset, correlation: bestCorrelation };
-  }
-
   private frequencyToNote(frequency: number): NoteDetection {
     const bassStrings = [
-      { note: 'E', freq: 41.2, string: 'E' as const },
-      { note: 'A', freq: 55.0, string: 'A' as const },
-      { note: 'D', freq: 73.4, string: 'D' as const },
-      { note: 'G', freq: 98.0, string: 'G' as const },
+      { note: 'E', freq: 41.2, string: BassString.E },
+      { note: 'A', freq: 55.0, string: BassString.A },
+      { note: 'D', freq: 73.4, string: BassString.D },
+      { note: 'G', freq: 98.0, string: BassString.G },
     ];
 
     const A4 = 440;

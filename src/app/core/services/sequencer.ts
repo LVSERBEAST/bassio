@@ -5,7 +5,7 @@ import { AudioInput } from './audio-input';
 
 export interface Note {
   id: string;
-  string: number;
+  string: BassString;
   fret: number;
   position: number;
   spawnBeat: number;
@@ -18,18 +18,25 @@ export interface Note {
 
 export interface Sequence {
   notes: Array<{
-    string: number;
+    string: BassString;
     fret: number;
     beat: number;
     duration?: number;
   }>;
 }
 
+export enum BassString {
+  E = 0,
+  A = 1,
+  D = 2,
+  G = 3,
+}
+
 @Injectable({ providedIn: 'root' })
 export class Sequencer {
   private readonly audio = inject(Audio);
-  private readonly tempo = inject(Tempo);
   private readonly audioInput = inject(AudioInput);
+  readonly tempo = inject(Tempo);
 
   readonly notes = signal<Note[]>([]);
   readonly isPlaying = signal(false);
@@ -59,9 +66,7 @@ export class Sequencer {
     effect(() => {
       const detected = this.audioInput.currentNote();
       if (detected && this.isPlaying() && this.audioInput.isActive()) {
-        const stringMap: Record<string, number> = { E: 3, A: 2, D: 1, G: 0 };
-        const stringNum = stringMap[detected.string];
-        this.checkHit(detected.note, stringNum);
+        this.checkHit(detected.note, detected.string); // Already correct type
       }
     });
   }
@@ -73,13 +78,13 @@ export class Sequencer {
 
     const bpm = this.tempo.bpm();
     const countdownDuration = (8 * 60) / bpm;
-    const beatZeroTime = this.audio.context.currentTime + countdownDuration;
+    const beatZeroTime = this.audio.context.currentTime + countdownDuration + 0.1;
 
     this.tempo.start(beatZeroTime);
     this.isPlaying.set(true);
     this.lastNoteBeat = Math.max(...sequence.notes.map((n) => n.beat));
 
-    //this.spawnNotesAndMarkers(sequence.notes, hitZonePosition, bpm);
+    this.pendingSequence = sequence.notes;
     this.startAnimation();
   }
 
@@ -94,7 +99,7 @@ export class Sequencer {
     this.clear();
   }
 
-  private checkHit(detectedNote: string, detectedString: number): void {
+  private checkHit(detectedNote: string, detectedString: BassString): void {
     const hitZone = this.hitZonePosition();
 
     this.notes.update((notes) =>
@@ -104,6 +109,9 @@ export class Sequencer {
         const distance = Math.abs(note.position - hitZone);
         const expectedNote = this.noteFromStringFret(note.string, note.fret);
         const correctNote = detectedNote === expectedNote && detectedString === note.string;
+        console.log('Detected:', detectedNote, 'on string', detectedString);
+        console.log('Expected:', expectedNote, 'on string', note.string, 'at fret', note.fret);
+        console.log('Distance:', distance, 'Correct:', correctNote);
 
         if (note.duration) {
           return this.checkSustainedNote(note, distance, correctNote, hitZone);
@@ -181,8 +189,8 @@ export class Sequencer {
 
     const totalBeats = this.lastNoteBeat + 8;
     const markers = [];
-    for (let beat = 0; beat < totalBeats; beat++) {
-      const beatNumber = (beat % 4) + 1;
+    for (let beat = -8; beat < totalBeats; beat++) {
+      const beatNumber = (((beat % 4) + 4) % 4) + 1;
       markers.push({
         id: `marker-${beat}`,
         beatNumber,
@@ -247,15 +255,24 @@ export class Sequencer {
       this.pendingSequence = null;
     }
 
+    if (
+      this.notes().length === 0 &&
+      !this.pendingSequence &&
+      this.currentBeat() > this.lastNoteBeat + 2
+    ) {
+      this.stop();
+      return;
+    }
+
     this.rafId = requestAnimationFrame(() => this.animate());
   }
 
-  private noteFromStringFret(string: number, fret: number): string {
+  private noteFromStringFret(string: BassString, fret: number): string {
     const openNotes = [
-      { note: 'G', octave: 2 },
-      { note: 'D', octave: 2 },
-      { note: 'A', octave: 1 },
-      { note: 'E', octave: 1 },
+      { note: 'E', octave: 1 }, // BassString.E = 0
+      { note: 'A', octave: 1 }, // BassString.A = 1
+      { note: 'D', octave: 2 }, // BassString.D = 2
+      { note: 'G', octave: 2 }, // BassString.G = 3
     ];
 
     const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];

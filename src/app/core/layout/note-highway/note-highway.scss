@@ -25,17 +25,17 @@
   height: 25%;
 
   &:nth-child(1) {
-    top: 0;
-  }
-  &:nth-child(2) {
-    top: 25%;
-  }
-  &:nth-child(3) {
-    top: 50%;
-  }
-  &:nth-child(4) {
     top: 75%;
-  }
+  } // E at bottom
+  &:nth-child(2) {
+    top: 50%;
+  } // A
+  &:nth-child(3) {
+    top: 25%;
+  } // D
+  &:nth-child(4) {
+    top: 0;
+  } // G at top
 }
 
 .string-label {
@@ -102,7 +102,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: translateY(-50%);
+  transform: translateY(-50%) translateX(calc(-50% + 3px));
   box-shadow: 0 0 20px rgba(34, 187, 172, 0.6), 0 0 40px rgba(34, 187, 172, 0.3),
     inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 4px rgba(0, 0, 0, 0.3);
   transition: transform 0.05s linear;
@@ -126,8 +126,9 @@
   }
 
   &.sustained {
+    transform: translateY(-50%);
     border-radius: 1.75rem;
-    width: auto; // Override fixed width
+    width: auto;
     min-width: 3.5rem;
     padding: 0 1rem;
 
@@ -147,35 +148,35 @@
 @keyframes note-heartbeat {
   0%,
   100% {
-    transform: translateY(-50%) scale(1);
+    transform: translateY(-50%) translateX(calc(-50% + 3px)) scale(1);
   }
   15% {
-    transform: translateY(-50%) scale(1.15);
+    transform: translateY(-50%) translateX(calc(-50% + 3px)) scale(1.15);
   }
   30% {
-    transform: translateY(-50%) scale(1.1);
+    transform: translateY(-50%) translateX(calc(-50% + 3px)) scale(1.1);
   }
 }
 
 @keyframes note-hit-perfect {
   0% {
-    transform: translateY(-50%) scale(1);
+    transform: translateY(-50%) translateX(calc(-50% + 3px)) scale(1);
   }
   50% {
-    transform: translateY(-50%) scale(1.3);
+    transform: translateY(-50%) translateX(calc(-50% + 3px)) scale(1.3);
   }
   100% {
-    transform: translateY(-50%) scale(0);
+    transform: translateY(-50%) translateX(calc(-50% + 3px)) scale(0);
     opacity: 0;
   }
 }
 
 @keyframes note-hit-miss {
   0% {
-    transform: translateY(-50%) scale(1);
+    transform: translateY(-50%) translateX(calc(-50% + 3px)) scale(1);
   }
   100% {
-    transform: translateY(-50%) scale(0.5);
+    transform: translateY(-50%) translateX(calc(-50% + 3px)) scale(0.5);
     opacity: 0;
   }
 }

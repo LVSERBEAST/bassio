@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { Sequencer, Sequence } from '../../../core/services/sequencer';
+import { Sequencer, Sequence, BassString } from '../../../core/services/sequencer';
 
 interface KeyInfo {
   id: number;
@@ -139,14 +139,27 @@ export class CircleOfFourths {
   private generateScalePattern(): Sequence {
     return {
       notes: [
-        { string: 3, fret: 8, beat: 0 },
-        { string: 3, fret: 10, beat: 1 },
-        { string: 3, fret: 12, beat: 2 },
-        { string: 3, fret: 13, beat: 3 },
-        { string: 3, fret: 15, beat: 4 },
-        { string: 2, fret: 2, beat: 5 },
-        { string: 2, fret: 4, beat: 6 },
-        { string: 2, fret: 5, beat: 7 },
+        // Ascending
+        { string: BassString.A, fret: 3, beat: 0 }, // C
+        { string: BassString.A, fret: 5, beat: 1 }, // D
+        { string: BassString.D, fret: 2, beat: 2 }, // E
+        { string: BassString.D, fret: 3, beat: 3 }, // F
+        { string: BassString.D, fret: 5, beat: 4 }, // G
+        { string: BassString.G, fret: 2, beat: 5 }, // A
+        { string: BassString.G, fret: 4, beat: 6 }, // B
+        { string: BassString.G, fret: 5, beat: 7 }, // C (octave)
+
+        // Descending
+        { string: BassString.G, fret: 4, beat: 8 }, // B
+        { string: BassString.G, fret: 2, beat: 9 }, // A
+        { string: BassString.D, fret: 5, beat: 10 }, // G
+        { string: BassString.D, fret: 3, beat: 11 }, // F
+        { string: BassString.D, fret: 2, beat: 12 }, // E
+        { string: BassString.A, fret: 5, beat: 13 }, // D
+
+        // Sustained root
+        //{ string: BassString.A, fret: 3, beat: 14, duration: 2 }, // C (2 beats)
+        { string: BassString.A, fret: 3, beat: 14 }
       ],
     };
   }

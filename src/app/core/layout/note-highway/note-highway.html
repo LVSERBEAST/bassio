@@ -33,7 +33,9 @@
       [class.sustain-hitting]="note.sustainHitting"
       [style.width]="note.duration ? note.duration * sequencer.pixelsPerBeat() + 'vw' : '3.5rem'"
       [style.left.%]="note.position"
-      [style.top]="'calc(' + note.string * 25 + '% + 0.75rem)'"
+      [style.top]="'calc(' + (3 - note.string) * 25 + '% + 0.75rem)'"
+      [style.animation-duration]="note.state === 'approaching' ? beatDuration() + 's' : null"
+      [style.animation-delay]="note.state === 'approaching' ? '-' + (beatDuration() * 0.2) + 's' : null"
     >
       <span class="fret-num">{{ note.fret }}</span>
     </div>
