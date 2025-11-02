@@ -1,0 +1,157 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Note Detection Debugger - Instructions</h2>
+      <button mat-icon-button (click)="close.emit()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <section>
+        <h3>Overview</h3>
+        <p>
+          This tool helps you debug and tune the note detection system. Play your bass and observe
+          real-time detection, adjust parameters, and troubleshoot issues.
+        </p>
+      </section>
+
+      <section>
+        <h3>Getting Started</h3>
+        <ol>
+          <li>Ensure your audio input device is connected and active</li>
+          <li>Play a single note on your bass</li>
+          <li>Observe the detection in the "Live Detection" panel</li>
+          <li>Check the waveform and spectrum visualizations</li>
+          <li>Adjust parameters if detection is inaccurate</li>
+        </ol>
+      </section>
+
+      <section>
+        <h3>Parameters Guide</h3>
+        
+        <div class="param-guide">
+          <h4>RMS Threshold</h4>
+          <p>
+            Controls how loud a signal must be to trigger detection. Lower values detect quieter
+            notes but may pick up noise. Start at 0.01 and increase if you get false detections
+            from background noise.
+          </p>
+        </div>
+
+        <div class="param-guide">
+          <h4>YIN Threshold</h4>
+          <p>
+            Confidence level required for pitch detection. Lower values detect more notes but with
+            less accuracy. Increase if you get wildly incorrect pitches. Keep between 0.10-0.20.
+          </p>
+        </div>
+
+        <div class="param-guide">
+          <h4>Attack Multiplier</h4>
+          <p>
+            How much louder a signal must be (compared to previous) to be considered an "attack"
+            (new pluck). Increase if the first moment of each pluck gives incorrect pitches.
+          </p>
+        </div>
+
+        <div class="param-guide">
+          <h4>Attack Min RMS</h4>
+          <p>
+            Minimum volume required to trigger attack detection. Prevents soft ambient sounds from
+            being treated as attacks.
+          </p>
+        </div>
+
+        <div class="param-guide">
+          <h4>Attack Skip Frames</h4>
+          <p>
+            Number of detection cycles to skip after an attack is detected. The initial pluck has
+            noisy harmonics - skipping 2-4 frames lets the note stabilize before detecting pitch.
+          </p>
+        </div>
+
+        <div class="param-guide">
+          <h4>Median Size</h4>
+          <p>
+            Size of the smoothing buffer. Larger values = more stable but slower to respond to note
+            changes. Use 5 for balanced performance, or 3 for faster response.
+          </p>
+        </div>
+
+        <div class="param-guide">
+          <h4>Update Rate</h4>
+          <p>
+            How often (in milliseconds) to detect pitch. 50ms provides good balance. Lower = more
+            responsive but uses more CPU. Higher = more efficient but may miss quick notes.
+          </p>
+        </div>
+
+        <div class="param-guide">
+          <h4>Min/Max Frequency</h4>
+          <p>
+            Range of frequencies to detect. Bass guitar range is ~40-400Hz. Narrowing this range
+            improves accuracy and performance.
+          </p>
+        </div>
+
+        <div class="param-guide">
+          <h4>FFT Size</h4>
+          <p>
+            Buffer size for analysis. Larger = more accurate for low notes but slower. 8192 is
+            recommended for bass. Use 4096 for faster response if needed.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h3>Troubleshooting</h3>
+        
+        <div class="trouble-item">
+          <strong>Problem:</strong> Random notes detected when not playing
+          <br />
+          <strong>Solution:</strong> Increase RMS Threshold to 0.02-0.05
+        </div>
+
+        <div class="trouble-item">
+          <strong>Problem:</strong> Wrong notes detected during the pluck
+          <br />
+          <strong>Solution:</strong> Increase Attack Skip Frames to 4-5
+        </div>
+
+        <div class="trouble-item">
+          <strong>Problem:</strong> Detection is too slow
+          <br />
+          <strong>Solution:</strong> Decrease Median Size to 3, or Update Rate to 30ms
+        </div>
+
+        <div class="trouble-item">
+          <strong>Problem:</strong> Notes jump between octaves
+          <br />
+          <strong>Solution:</strong> Increase YIN Threshold to 0.18-0.20
+        </div>
+
+        <div class="trouble-item">
+          <strong>Problem:</strong> Low E string not detected
+          <br />
+          <strong>Solution:</strong> Increase FFT Size to 8192, lower Min Frequency to 35Hz
+        </div>
+      </section>
+
+      <section>
+        <h3>Tips</h3>
+        <ul>
+          <li>Use Pause to freeze the display and examine detection patterns</li>
+          <li>Export logs to analyze detection accuracy over time</li>
+          <li>Watch the waveform to see when attacks occur</li>
+          <li>Check the spectrum to see if harmonics are stronger than fundamentals</li>
+          <li>Adjust one parameter at a time and test thoroughly</li>
+        </ul>
+      </section>
+    </div>
+
+    <div class="modal-footer">
+      <button mat-flat-button color="primary" (click)="close.emit()">Got It</button>
+    </div>
+  </div>
+</div>

@@ -66,7 +66,7 @@ export class Sequencer {
     effect(() => {
       const detected = this.audioInput.currentNote();
       if (detected && this.isPlaying() && this.audioInput.isActive()) {
-        this.checkHit(detected.note, detected.string); // Already correct type
+        this.checkHit(detected.note, detected.string);
       }
     });
   }

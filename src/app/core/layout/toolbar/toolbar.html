@@ -66,8 +66,29 @@
       <a routerLink="/circle-of-fourths"><button mat-menu-item>Circle of Fourths</button></a>
     </mat-menu>
 
-    <button class="avatar-btn" (click)="onUserClick()">
+    <button class="avatar-btn" [matMenuTriggerFor]="userMenu">
       {{ userName().charAt(0) }}
     </button>
+
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item disabled>
+        <mat-icon>account_circle</mat-icon>
+        <span>Profile</span>
+      </button>
+      <button mat-menu-item disabled>
+        <mat-icon>settings</mat-icon>
+        <span>Settings</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item routerLink="/admin/note-detection">
+        <mat-icon>bug_report</mat-icon>
+        <span>Note Debugger</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item disabled>
+        <mat-icon>logout</mat-icon>
+        <span>Sign Out</span>
+      </button>
+    </mat-menu>
   </div>
 </mat-toolbar>

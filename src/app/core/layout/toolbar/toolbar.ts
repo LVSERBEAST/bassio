@@ -8,11 +8,12 @@ import { AudioInput } from '../../services/audio-input';
 import { Metronome } from '../../services/metronome';
 import { Sequencer } from '../../services/sequencer';
 import { Tempo } from '../../services/tempo';
+import { MatDivider } from '@angular/material/divider';
 
 @Component({
   selector: 'toolbar',
   standalone: true,
-  imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, RouterLink],
+  imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, RouterLink, MatDivider],
   templateUrl: './toolbar.html',
   styleUrls: ['./toolbar.scss'],
 })
@@ -83,9 +84,5 @@ export class Toolbar {
     if (!isNaN(value)) {
       this.tempo.setBpm(value);
     }
-  }
-
-  onUserClick() {
-    console.log('User menu');
   }
 }

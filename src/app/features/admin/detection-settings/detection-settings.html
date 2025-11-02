@@ -1,0 +1,187 @@
+<div class="debug-container">
+  <div class="debug-header">
+    <button mat-button class="back-btn" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Go Back
+    </button>
+    <h1>NOTE DETECTION DEBUGGER</h1>
+    <div class="header-actions">
+      <button mat-icon-button matTooltip="Clear History" (click)="clearHistory()">
+        <mat-icon>delete_sweep</mat-icon>
+      </button>
+      <button mat-icon-button (click)="togglePause()" [matTooltip]="isPaused() ? 'Resume' : 'Pause'">
+        <mat-icon>{{ isPaused() ? 'play_arrow' : 'pause' }}</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Export Detection Log" (click)="exportLog()">
+        <mat-icon>download</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Export Parameters" (click)="exportParams()">
+        <mat-icon>save_alt</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Reset to Defaults" (click)="resetDefaults()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="debug-panel">
+    <div class="columns">
+      <!-- History Column -->
+      <div class="column history-column">
+        <div class="history-list">
+          @for (item of history(); track $index) {
+            <div class="history-item">
+              @if (item.note) {
+                <span class="note-dot" [style.background]="getStringColor(item.string)">●</span>
+                <span class="note-name">{{ item.note }}</span>
+                <span class="frequency">{{ item.frequency.toFixed(1) }}Hz</span>
+              } @else {
+                <span class="note-null">─null─</span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Detection Column -->
+      <div class="column detection-column">
+        @if (currentDetection(); as detection) {
+          <div class="detection-display">
+            <div class="note-large">{{ detection.note }}</div>
+            <div class="frequency-large">{{ detection.frequency.toFixed(3) }} Hz</div>
+            <div class="detection-meta">
+              <span>String: <span [style.color]="getStringColor(detection.string)">{{ ['E', 'A', 'D', 'G'][detection.string] }} ●</span></span>
+            </div>
+            <div class="detection-meta">
+              <span>Cents: {{ detection.cents > 0 ? '+' : '' }}{{ detection.cents }}¢</span>
+            </div>
+          </div>
+        } @else {
+          <div class="detection-display empty">
+            <div class="note-large">—</div>
+            <div class="frequency-large">No signal</div>
+          </div>
+        }
+
+        <div class="debug-info">
+          <div class="debug-row">
+            <span class="label">RMS:</span>
+            <span class="value">{{ currentDetection() ? '0.045' : '0.000' }}</span>
+          </div>
+          <div class="debug-row">
+            <span class="label">YIN:</span>
+            <span class="value">✓ 0.12</span>
+          </div>
+          <div class="debug-row">
+            <span class="label">Attack:</span>
+            <span class="value" [class.active]="attackStatus().active">
+              {{ attackStatus().active ? '🔴 SKIP' : '⚫ IDLE' }}
+            </span>
+          </div>
+          <div class="debug-row">
+            <span class="label">Frames:</span>
+            <span class="value">{{ attackStatus().remaining }}/{{ attackSkipFrames() }}</span>
+          </div>
+          <div class="debug-section">
+            <div class="label">Median Buffer:</div>
+            <div class="median-values">
+              @for (val of medianBuffer(); track $index) {
+                @if (val !== null) {
+                  <span class="median-val">{{ val.toFixed(1) }}</span>
+                }
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parameters Column -->
+      <div class="column params-column">
+        <div class="param-group">
+          <div class="param-pair">
+            <div class="param-item">
+              <label matTooltip="Minimum signal strength">RMS</label>
+              <input type="number" [ngModel]="rmsThreshold()" (ngModelChange)="rmsThreshold.set($event)" step="0.001" min="0.001" max="0.1" />
+            </div>
+            <div class="param-item">
+              <label matTooltip="YIN confidence threshold">YIN</label>
+              <input type="number" [ngModel]="yinThreshold()" (ngModelChange)="yinThreshold.set($event)" step="0.01" min="0.05" max="0.3" />
+            </div>
+          </div>
+
+          <div class="param-pair">
+            <div class="param-item">
+              <label matTooltip="Attack multiplier">Atk×</label>
+              <input type="number" [ngModel]="attackMultiplier()" (ngModelChange)="attackMultiplier.set($event)" step="0.1" min="1.1" max="3.0" />
+            </div>
+            <div class="param-item">
+              <label matTooltip="Attack min RMS">Atk Min</label>
+              <input type="number" [ngModel]="attackMinRms()" (ngModelChange)="attackMinRms.set($event)" step="0.01" min="0.01" max="0.1" />
+            </div>
+          </div>
+
+          <div class="param-single">
+            <label matTooltip="Frames to skip after attack">Skip Frames</label>
+            <input type="number" [ngModel]="attackSkipFrames()" (ngModelChange)="attackSkipFrames.set($event)" step="1" min="0" max="10" />
+          </div>
+
+          <div class="param-pair">
+            <div class="param-item">
+              <label matTooltip="Median buffer size">Median</label>
+              <input type="number" [ngModel]="medianSize()" (ngModelChange)="medianSize.set($event)" step="1" min="1" max="10" />
+            </div>
+            <div class="param-item">
+              <label matTooltip="Update rate">Rate (ms)</label>
+              <input type="number" [ngModel]="updateInterval()" (ngModelChange)="updateInterval.set($event)" step="10" min="10" max="100" />
+            </div>
+          </div>
+
+          <div class="param-pair">
+            <div class="param-item">
+              <label matTooltip="Min frequency">Min (Hz)</label>
+              <input type="number" [ngModel]="minFrequency()" (ngModelChange)="minFrequency.set($event)" step="1" min="20" max="50" />
+            </div>
+            <div class="param-item">
+              <label matTooltip="Max frequency">Max (Hz)</label>
+              <input type="number" [ngModel]="maxFrequency()" (ngModelChange)="maxFrequency.set($event)" step="10" min="200" max="600" />
+            </div>
+          </div>
+
+          <div class="param-single">
+            <label>FFT Size</label>
+            <div class="fft-buttons">
+              <button mat-stroked-button [class.active]="fftSize() === 2048" (click)="setFftSize(2048)">2K</button>
+              <button mat-stroked-button [class.active]="fftSize() === 4096" (click)="setFftSize(4096)">4K</button>
+              <button mat-stroked-button [class.active]="fftSize() === 8192" (click)="setFftSize(8192)">8K</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visualizers -->
+    <div class="visualizers-grid">
+      <div class="visualizer">
+        <div class="visualizer-controls">
+          <mat-slide-toggle 
+            [checked]="waveformEnabled()" 
+            (change)="toggleWaveformRender()"
+            matTooltip="Toggle waveform">
+          </mat-slide-toggle>
+        </div>
+        <canvas #waveformCanvas class="waveform-canvas"></canvas>
+      </div>
+
+      <div class="visualizer">
+        <div class="visualizer-controls">
+          <mat-slide-toggle 
+            [checked]="spectrumEnabled()" 
+            (change)="toggleSpectrumRender()"
+            matTooltip="Toggle spectrum">
+          </mat-slide-toggle>
+        </div>
+        <canvas #spectrumCanvas class="spectrum-canvas"></canvas>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,132 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: linear-gradient(145deg, #2c2926, #1e1b19);
+  border: 2px solid rgba(238, 152, 0, 0.3);
+  border-radius: 1rem;
+  max-width: 800px;
+  max-height: 80vh;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(87, 83, 78, 0.3);
+
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ee9800;
+  }
+}
+
+.modal-body {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  color: rgba(247, 239, 235, 0.9);
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(87, 83, 78, 0.2);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(238, 152, 0, 0.5);
+    border-radius: 4px;
+  }
+
+  section {
+    margin-bottom: 2rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ee9800;
+      margin: 0 0 1rem 0;
+    }
+
+    p {
+      line-height: 1.6;
+      margin: 0 0 1rem 0;
+      color: rgba(247, 239, 235, 0.8);
+    }
+
+    ol,
+    ul {
+      line-height: 1.8;
+      padding-left: 1.5rem;
+      margin: 0;
+      color: rgba(247, 239, 235, 0.8);
+    }
+  }
+
+  .param-guide {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-left: 3px solid #ee9800;
+    border-radius: 0.25rem;
+
+    h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ffb95f;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+  }
+
+  .trouble-item {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+
+    strong {
+      color: #ee9800;
+    }
+  }
+}
+
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid rgba(87, 83, 78, 0.3);
+  display: flex;
+  justify-content: flex-end;
+
+  button {
+    min-width: 120px;
+  }
+}
